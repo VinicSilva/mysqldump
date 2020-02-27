@@ -33,6 +33,10 @@ function buildInsertValue(row: QueryRes, table: Table): string {
     return `(${table.columnsOrdered.map(c => row[c]).join(',')})`;
 }
 
+function buildInsertColumn(table: Table): string {
+    return `(${table.columnsOrdered.map(c => `CONVERT(CAST(${c} as BINARY) USING utf8)`).join(',')})`;
+}
+
 function executeSql(connection: mysql.Connection, sql: string): Promise<void> {
     return new Promise((resolve, reject) =>
         connection.query(sql, err =>
@@ -155,7 +159,7 @@ async function getDataDump(
                     ? ` WHERE ${options.where[table.name]}`
                     : '';
                 const query = connection.query(
-                    `SELECT * FROM \`${table.name}\`${where}`,
+                    `SELECT ${buildInsertColumn(table)} FROM \`${table.name}\`${where}`,
                 );
 
                 let rowQueue: Array<string> = [];
