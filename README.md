@@ -1,4 +1,4 @@
-# Mysql Dump
+# Mysql Dump++
 
 [![npm version](https://badge.fury.io/js/mysqldump.svg)](https://npmjs.com/package/mysqldump) [![Build Status](https://travis-ci.org/bradzacher/mysqldump.svg)](https://travis-ci.org/bradzacher/mysqldump)
 
