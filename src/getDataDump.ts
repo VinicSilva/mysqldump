@@ -6,6 +6,7 @@ import { all as merge } from 'deepmerge';
 import { ConnectionOptions, DataDumpOptions } from './interfaces/Options';
 import { Table } from './interfaces/Table';
 import { typeCast } from './typeCast';
+let addValuesInInsert = false;
 
 interface QueryRes {
     [k: string]: unknown;
@@ -16,21 +17,30 @@ function buildInsert(
     values: Array<string>,
     format: (s: string) => string,
 ): string {
-    const sql = format(
+    let sql = format(
         [
-            `INSERT INTO \`${table.name}\` (\`${table.columnsOrdered.join(
-                '`,`',
-            )}\`)`,
-            `VALUES ${values.join(',')};`,
+            `,${values.join(',')}`,
         ].join(' '),
     );
+
+    if(!addValuesInInsert){
+        sql = format(
+            [
+                `INSERT INTO \`${table.name}\` (\`${table.columnsOrdered.join(
+                    '`,`',
+                )}\`)`,
+                `VALUES ${values.join(',')}`,
+            ].join(' '),
+        );
+        addValuesInInsert = true;
+    }
 
     // sql-formatter lib doesn't support the X'aaff' or b'01010' literals, and it adds a space in and breaks them
     // this undoes the wrapping we did to get around the formatting
     return sql.replace(/NOFORMAT_WRAP\("##(.+?)##"\)/g, '$1');
 }
 function buildInsertValue(row: QueryRes, table: Table): string {
-    return `(${table.columnsOrdered.map(c => decodeURIComponent(escape(row[c]))).join(',')})`;
+    return `(${table.columnsOrdered.map(c => decodeURIComponent(escape(<string>row[c]))).join(',')})`;
 }
 
 function executeSql(connection: mysql.Connection, sql: string): Promise<void> {
@@ -177,9 +187,11 @@ async function getDataDump(
                     // write the remaining rows to disk
                     if (rowQueue.length > 0) {
                         const insert = buildInsert(table, rowQueue, format);
-                        saveChunk(insert);
+                        saveChunk(insert + ";");
                         rowQueue = [];
                     }
+
+                    addValuesInInsert = false;
 
                     resolve();
                 });
