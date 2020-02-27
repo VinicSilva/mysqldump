@@ -172,6 +172,7 @@ async function getDataDump(
 
                 // stream the data to the file
                 query.on('result', (row: QueryRes) => {
+                    saveChunk(`\nLOCK TABLES \`${table.name}\` WRITE;\n`);
                     // build the values list
                     rowQueue.push(buildInsertValue(row, table));
 
@@ -179,7 +180,8 @@ async function getDataDump(
                     if (rowQueue.length === options.maxRowsPerInsertStatement) {
                         // create and write a fresh statement
                         const insert = buildInsert(table, rowQueue, format);
-                        saveChunk(insert);
+                        saveChunk(insert + ";");
+                        saveChunk("\nUNLOCK TABLES;\n");
                         rowQueue = [];
                     }
                 });

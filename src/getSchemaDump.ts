@@ -99,7 +99,7 @@ async function getSchemaDump(
                 } else if (options.table.ifNotExist) {
                     s.schema = s.schema.replace(
                         /^CREATE TABLE/,
-                        'CREATE TABLE IF NOT EXISTS',
+                        `DROP TABLE IF EXISTS \`${s.name}\`;\nCREATE TABLE IF NOT EXISTS`,
                     );
                 }
                 if (options.table.charset === false) {
