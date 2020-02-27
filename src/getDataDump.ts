@@ -30,11 +30,7 @@ function buildInsert(
     return sql.replace(/NOFORMAT_WRAP\("##(.+?)##"\)/g, '$1');
 }
 function buildInsertValue(row: QueryRes, table: Table): string {
-    return `(${table.columnsOrdered.map(c => row[c]).join(',')})`;
-}
-
-function buildInsertColumn(table: Table): string {
-    return `(${table.columnsOrdered.map(c => `CONVERT(CAST(${c} as BINARY) USING utf8)`).join(',')})`;
+    return `(${table.columnsOrdered.map(c => decodeURIComponent(escape(row[c]))).join(',')})`;
 }
 
 function executeSql(connection: mysql.Connection, sql: string): Promise<void> {
@@ -159,7 +155,7 @@ async function getDataDump(
                     ? ` WHERE ${options.where[table.name]}`
                     : '';
                 const query = connection.query(
-                    `SELECT ${buildInsertColumn(table)} FROM \`${table.name}\`${where}`,
+                    `SELECT * FROM \`${table.name}\`${where}`,
                 );
 
                 let rowQueue: Array<string> = [];
