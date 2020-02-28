@@ -124,16 +124,6 @@ async function getSchemaDump(
             // add a semicolon to separate schemas
             s.schema += ';';
 
-            // pad the sql with a header
-            s.schema = [
-                '# ------------------------------------------------------------',
-                `# SCHEMA DUMP FOR TABLE: ${s.name}`,
-                '# ------------------------------------------------------------',
-                '',
-                s.schema,
-                '',
-            ].join('\n');
-
             return s;
         })
         .sort((a, b) => {

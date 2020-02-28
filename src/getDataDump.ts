@@ -20,17 +20,14 @@ function buildInsert(
     let sql = format(
         [
             `,${values.join(',')}`,
-        ].join(' '),
+        ].join(''),
     );
 
     if(!addValuesInInsert){
         sql = format(
             [
-                `INSERT INTO \`${table.name}\` (\`${table.columnsOrdered.join(
-                    '`,`',
-                )}\`)`,
-                `VALUES ${values.join(',')}`,
-            ].join(' '),
+                `INSERT INTO \`${table.name}\` VALUES ${values.join(',')}`,
+            ].join(''),
         );
         addValuesInInsert = true;
     }
@@ -101,7 +98,7 @@ async function getDataDump(
 
         // write to file if configured
         if (outFileStream) {
-            str.forEach(s => outFileStream.write(`${s}\n`));
+            str.forEach(s => outFileStream.write(`${s}`));
         }
 
         // write to memory if configured
@@ -145,19 +142,6 @@ async function getDataDump(
                 saveChunk('');
             }
 
-            if (options.verbose) {
-                // write the table header to the file
-                const header = [
-                    '# ------------------------------------------------------------',
-                    `# DATA DUMP FOR TABLE: ${table.name}${
-                        options.lockTables ? ' (locked)' : ''
-                    }`,
-                    '# ------------------------------------------------------------',
-                    '',
-                ];
-                saveChunk(header);
-            }
-
             // eslint-disable-next-line no-await-in-loop
             await new Promise((resolve, reject) => {
                 // send the query
@@ -171,8 +155,8 @@ async function getDataDump(
                 let rowQueue: Array<string> = [];
 
                 // stream the data to the file
+                saveChunk(`\nLOCK TABLES \`${table.name}\` WRITE;\n`);
                 query.on('result', (row: QueryRes) => {
-                    saveChunk(`\nLOCK TABLES \`${table.name}\` WRITE;\n`);
                     // build the values list
                     rowQueue.push(buildInsertValue(row, table));
 
@@ -180,8 +164,8 @@ async function getDataDump(
                     if (rowQueue.length === options.maxRowsPerInsertStatement) {
                         // create and write a fresh statement
                         const insert = buildInsert(table, rowQueue, format);
-                        saveChunk(insert + ";");
-                        saveChunk("\nUNLOCK TABLES;\n");
+                        saveChunk(insert);
+
                         rowQueue = [];
                     }
                 });
@@ -194,7 +178,7 @@ async function getDataDump(
                     }
 
                     addValuesInInsert = false;
-
+                    saveChunk("\nUNLOCK TABLES;\n");
                     resolve();
                 });
                 query.on(
