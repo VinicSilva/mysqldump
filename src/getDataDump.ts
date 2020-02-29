@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as mysql from 'mysql2';
-import * as sqlformatter from 'sql-formatter';
 import { all as merge } from 'deepmerge';
 
 import { ConnectionOptions, DataDumpOptions } from './interfaces/Options';
@@ -154,7 +153,9 @@ async function getDataDump(
 
                 // stream the data to the file
                 saveChunk(`\nLOCK TABLES \`${table.name}\` WRITE;\n`);
+                let existsData = false;
                 query.on('result', (row: QueryRes) => {
+                    existsData = true;
                     // build the values list
                     rowQueue.push(buildInsertValue(row, table));
 
@@ -168,10 +169,15 @@ async function getDataDump(
                     }
                 });
                 query.on('end', () => {
+                    if(existsData)
+                        saveChunk(";");
+
+                    existsData = false;
+
                     // write the remaining rows to disk
                     if (rowQueue.length > 0) {
                         const insert = buildInsert(table, rowQueue, format);
-                        saveChunk(insert + ";");
+                        saveChunk(insert);
                         rowQueue = [];
                     }
 
