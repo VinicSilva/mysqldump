@@ -65,9 +65,7 @@ async function getDataDump(
     tables = [...tables];
 
     // build the format function if requested
-    const format = options.format
-        ? (sql: string) => sqlformatter.format(sql)
-        : (sql: string) => sql;
+    const format = (sql: string) => sql;
 
     // we open a new connection with a special typecast function for dumping data
     const connection = mysql.createConnection(
