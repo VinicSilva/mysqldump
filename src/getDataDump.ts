@@ -20,14 +20,14 @@ function buildInsert(
     let sql = format(
         [
             `,${values.join(',')}`,
-        ].join(''),
+        ].join(' '),
     );
 
     if(!addValuesInInsert){
         sql = format(
             [
                 `INSERT INTO \`${table.name}\` VALUES ${values.join(',')}`,
-            ].join(''),
+            ].join(' '),
         );
         addValuesInInsert = true;
     }
