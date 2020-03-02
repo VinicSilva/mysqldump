@@ -36,7 +36,7 @@ function buildInsert(
     return sql.replace(/NOFORMAT_WRAP\("##(.+?)##"\)/g, '$1');
 }
 function buildInsertValue(row: QueryRes, table: Table): string {
-    return `(${table.columnsOrdered.map(c => decodeURIComponent(escape(<string>row[c]))).join(',')})`;
+    return `(${table.columnsOrdered.map(c => decodeURIComponent(encodeURIComponent(<string>row[c]))).join(',')})`;
 }
 
 function executeSql(connection: mysql.Connection, sql: string): Promise<void> {
